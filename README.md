@@ -136,3 +136,91 @@ Base URL: `http://localhost:8000`
 - **FastAPI** — async Python web framework
 - **Grok AI** — LLM via OpenAI-compatible SDK
 - **Uvicorn** — ASGI server
+- **In-memory store** — centralized `routers/store.py` for users & progress
+
+---
+
+## New API Endpoints (v2)
+
+---
+
+### `POST /api/auth/register` — Register User
+**Body:**
+```json
+{ "username": "jaish", "password": "test123" }
+```
+**Response:**
+```json
+{ "success": true, "token": "amFpc2g=" }
+```
+
+---
+
+### `POST /api/auth/login` — Login User
+**Body:**
+```json
+{ "username": "jaish", "password": "test123" }
+```
+**Response:**
+```json
+{ "success": true, "token": "amFpc2g=" }
+```
+
+---
+
+### `POST /api/progress/update` — Update Progress
+**Body:**
+```json
+{ "username": "jaish", "module_id": 1, "score": 85 }
+```
+**Response:**
+```json
+{ "updated": true, "total_score": 85 }
+```
+
+---
+
+### `GET /api/progress/{username}` — Get User Progress
+**Response:**
+```json
+{
+  "completed": [1, 2],
+  "scores": {"1": 85, "2": 90},
+  "total_score": 175
+}
+```
+
+---
+
+### `GET /api/leaderboard` — Top 10 Leaderboard
+**Response:**
+```json
+[
+  { "rank": 1, "username": "jaish", "total_score": 175, "completed_count": 2 }
+]
+```
+
+---
+
+### `POST /api/simulate/spam` — Spam Classifier
+**Body:**
+```json
+{ "text": "BUY NOW! FREE MONEY!!!" }
+```
+**Response:**
+```json
+{ "is_spam": true, "confidence": 0.95, "reason": "Contains spam trigger words..." }
+```
+
+---
+
+### `POST /api/code/run` — Simulate Code Execution
+**Body:**
+```json
+{ "code": "print('hello')", "language": "python" }
+```
+**Response:**
+```json
+{ "output": "hello", "explanation": "The code prints the string 'hello' to stdout." }
+```
+

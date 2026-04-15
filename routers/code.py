@@ -51,3 +51,40 @@ def code_evaluate(req: CodeEvaluateRequest):
         raise HTTPException(status_code=422, detail="Grok returned invalid JSON. Retry.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class CodeRunRequest(BaseModel):
+    code: str
+    language: str = "python"
+
+
+@router.post("/code/run")
+def code_run(req: CodeRunRequest):
+    try:
+        response = get_client().chat.completions.create(
+            model="grok-3",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a code execution simulator. Given the code and its "
+                        "language, predict the output and explain what the code does. "
+                        "Return ONLY valid JSON with no markdown: "
+                        '{"output": "<simulated stdout>", "explanation": "<string>"}.'
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": f"Language: {req.language}\n\nCode:\n{req.code}",
+                },
+            ],
+            max_tokens=200,
+            temperature=0.3,
+        )
+        raw = response.choices[0].message.content
+        result = json.loads(_clean_json(raw))
+        return result
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=422, detail="Grok returned invalid JSON. Retry.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
