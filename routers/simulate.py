@@ -4,7 +4,7 @@ import re
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from routers.grok_client import get_client
+from routers.grok_client import get_client, GROQ_MODEL
 
 router = APIRouter()
 
@@ -14,7 +14,7 @@ class SpamRequest(BaseModel):
 
 
 def _clean_json(text: str) -> str:
-    """Strip markdown code fences if Grok wraps the JSON."""
+    """Strip markdown code fences if the LLM wraps the JSON."""
     text = text.strip()
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)
@@ -24,8 +24,9 @@ def _clean_json(text: str) -> str:
 @router.post("/simulate/spam")
 def simulate_spam(req: SpamRequest):
     try:
-        response = get_client().chat.completions.create(
-            model="grok-3",
+        client = get_client()
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
             messages=[
                 {
                     "role": "system",
@@ -47,6 +48,12 @@ def simulate_spam(req: SpamRequest):
         result = json.loads(_clean_json(raw))
         return result
     except json.JSONDecodeError:
-        raise HTTPException(status_code=422, detail="Grok returned invalid JSON. Retry.")
+        raise HTTPException(status_code=422, detail="AI returned invalid JSON. Please retry.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        if "api_key" in error_msg.lower() or "auth" in error_msg.lower() or "incorrect" in error_msg.lower():
+            raise HTTPException(
+                status_code=503,
+                detail="AI service authentication failed. Please check GROQ_API_KEY in .env"
+            )
+        raise HTTPException(status_code=500, detail=f"Simulation error: {error_msg}")

@@ -18,15 +18,9 @@ export default function TutorScreen() {
   const [completed, setCompleted] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  useEffect(() => { scrollToBottom(); }, [messages, loading]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, loading]);
-
-  // Auto-send first message
   useEffect(() => {
     const sendInitial = async () => {
       const question = `Explain ${topic} to me`;
@@ -36,10 +30,7 @@ export default function TutorScreen() {
         const data = await getTutorResponse(topic, question);
         setMessages((prev) => [...prev, { text: data.response, isUser: false }]);
       } catch {
-        setMessages((prev) => [
-          ...prev,
-          { text: `I'd love to explain ${topic}, but I'm having trouble connecting. Please try again!`, isUser: false },
-        ]);
+        setMessages((prev) => [...prev, { text: `I'd love to explain ${topic}, but I'm having trouble connecting. Please try again!`, isUser: false }]);
       } finally {
         setLoading(false);
       }
@@ -64,22 +55,12 @@ export default function TutorScreen() {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
   const handleMarkComplete = async () => {
     setCompleting(true);
-    try {
-      await updateProgress(username, topic.hashCode?.() || 1, 10);
-      setCompleted(true);
-    } catch {
-      setCompleted(true);
-    } finally {
-      setCompleting(false);
-    }
+    try { await updateProgress(username, topic.hashCode?.() || 1, 10); setCompleted(true); } catch { setCompleted(true); } finally { setCompleting(false); }
   };
 
   return (
@@ -87,40 +68,32 @@ export default function TutorScreen() {
       <Navbar />
 
       {/* Topic banner */}
-      <div className="border-b border-border bg-card">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="border-b border-border bg-white">
+        <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/learn')}
-              className="p-1.5 rounded-lg hover:bg-surface transition-colors cursor-pointer"
-            >
-              <svg className="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+            <button onClick={() => navigate('/learn')} className="p-1.5 rounded-lg hover:bg-surface transition-colors cursor-pointer">
+              <svg className="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
             <div>
               <h2 className="text-sm font-semibold text-text-primary">AI Tutor</h2>
-              <p className="text-xs text-text-muted">Topic: {topic}</p>
+              <p className="text-xs text-text-muted">{topic}</p>
             </div>
           </div>
-
           <button
             onClick={handleMarkComplete}
             disabled={completing || completed}
-            className={`text-xs px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
-              completed
-                ? 'bg-[#F0FFF0] text-[#2E7D32] border border-[#2E7D32]/30'
-                : 'bg-black text-white hover:bg-[#1F1F1F]'
+            className={`text-xs px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+              completed ? 'bg-[#F0FFF0] text-[#2E7D32] border border-[#2E7D32]/30' : 'bg-black text-white hover:bg-[#1F1F1F]'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            {completed ? '✓ Completed' : completing ? 'Saving...' : 'Mark as Complete (+10 XP)'}
+            {completed ? '✓ Completed' : completing ? 'Saving...' : 'Mark Complete (+10 XP)'}
           </button>
         </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+        <div className="max-w-3xl mx-auto px-6 py-6 space-y-4">
           {messages.map((msg, idx) => (
             <ChatBubble key={idx} message={msg.text} isUser={msg.isUser} />
           ))}
@@ -144,29 +117,25 @@ export default function TutorScreen() {
         </div>
       </div>
 
-      {/* Input */}
-      <div className="border-t border-border bg-card">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask a follow-up question..."
-              className="flex-1 px-4 py-3 rounded-xl bg-bg border border-border text-text-primary text-sm placeholder-text-muted focus:outline-none focus:border-black focus:ring-1 focus:ring-black/10 transition-all duration-200"
-              disabled={loading}
-            />
-            <button
-              onClick={handleSend}
-              disabled={loading || !input.trim()}
-              className="px-5 py-3 rounded-xl bg-black text-white font-medium text-sm hover:bg-[#1F1F1F] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            </button>
-          </div>
+      {/* Input bar */}
+      <div className="border-t border-border bg-white">
+        <div className="max-w-3xl mx-auto px-6 py-3 flex gap-3">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask a follow-up question..."
+            className="input-field"
+            disabled={loading}
+          />
+          <button
+            onClick={handleSend}
+            disabled={loading || !input.trim()}
+            className="px-5 py-3 rounded-xl bg-black text-white font-medium text-sm hover:bg-[#1F1F1F] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1"
+          >
+            Send
+          </button>
         </div>
       </div>
     </div>

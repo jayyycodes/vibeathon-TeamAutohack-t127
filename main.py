@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import tutor, quiz, code, modules, game
@@ -34,3 +36,31 @@ app.include_router(simulate.router, prefix="/api", tags=["Simulate"])
 @app.get("/")
 def health_check():
     return {"status": "ok", "service": "aiml-quest-backend"}
+
+
+@app.get("/api/health")
+def api_health():
+    """Check backend + Groq API connectivity."""
+    groq_key = os.getenv("GROQ_API_KEY", "")
+    key_set = bool(groq_key) and groq_key != "YOUR_GROQ_API_KEY_HERE"
+
+    result = {"backend": "ok", "groq_key_configured": key_set}
+
+    if key_set:
+        try:
+            from routers.grok_client import get_client, GROQ_MODEL
+            client = get_client()
+            resp = client.chat.completions.create(
+                model=GROQ_MODEL,
+                messages=[{"role": "user", "content": "Say OK"}],
+                max_tokens=5,
+            )
+            result["groq_api"] = "ok"
+            result["model"] = GROQ_MODEL
+        except Exception as e:
+            result["groq_api"] = "error"
+            result["groq_error"] = str(e)
+    else:
+        result["groq_api"] = "not_configured"
+
+    return result
