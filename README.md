@@ -8,6 +8,9 @@
     <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" />
     <img src="https://img.shields.io/badge/TailwindCSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
   </p>
+  <p align="center">
+    <a href="https://vibeathon-team-autohack-t127.vercel.app/"><img src="https://img.shields.io/badge/🚀 Live Demo-Click Here-black?style=for-the-badge" /></a>
+  </p>
 </p>
 
 ---
